@@ -1,44 +1,44 @@
+import requests
 from flask import Flask, request, jsonify
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium import __version__ as selenium_version
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)
 
 def check_user_existence(phone_number):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    url = "https://www.amazon.in/ap/signin"
+    params = {
+        "openid.pape.max_auth_age": "0",
+        "openid.return_to": "https://www.amazon.in/?ref_=nav_signin",
+        "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
+        "openid.assoc_handle": "inflex",
+        "openid.mode": "checkid_setup",
+        "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
+        "openid.ns": "http://specs.openid.net/auth/2.0"
+    }
     
-    try:
-        driver.get("https://www.amazon.in/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.in%2F%3Fref_%3Dnav_signin&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=inflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0")
-        input_field = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "ap_email"))
-        )
-        input_field.send_keys(phone_number)
-        continue_button = driver.find_element(By.ID, "continue")
-        continue_button.click()
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "auth-password-missing-alert"))
-        )
-        return True
-    except Exception as e:
-        print(f"Error: {e}")
-        return False
-    finally:
-        driver.quit()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    
+    session = requests.Session()
+    response = session.get(url, params=params, headers=headers)
+    
+    # Get the form action URL
+    form_action = response.text.split('action="')[1].split('"')[0]
+    
+    # Prepare the form data
+    form_data = {
+        "email": phone_number,
+        "create": "0",
+        "password": ""
+    }
+    
+    # Submit the form
+    response = session.post(form_action, data=form_data, headers=headers)
+    
+    # Check if the response contains the password field
+    return "password" in response.text
 
 @app.route('/api/check_user', methods=['POST'])
 def api_check_user():
