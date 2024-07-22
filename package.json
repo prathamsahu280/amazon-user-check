@@ -9,12 +9,10 @@
   },
   "dependencies": {
     "express": "^4.17.1",
-    "puppeteer-core": "^10.1.0",
-    "chrome-aws-lambda": "^10.1.0",
+    "node-fetch": "^2.6.1",
     "cors": "^2.8.5"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12",
-    "puppeteer": "^10.1.0"
+    "nodemon": "^2.0.12"
   }
 }

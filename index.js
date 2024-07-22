@@ -1,49 +1,40 @@
 const express = require('express');
+const fetch = require('node-fetch');
 const cors = require('cors');
-
-let puppeteer;
-let chromium;
-
-if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-  chromium = require('chrome-aws-lambda');
-  puppeteer = require('puppeteer-core');
-} else {
-  puppeteer = require('puppeteer');
-}
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 async function checkUserExistence(phoneNumber) {
-  let browser;
   try {
-    if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath,
-        headless: chromium.headless,
-      });
-    } else {
-      browser = await puppeteer.launch();
-    }
+    const response = await fetch("https://www.amazon.in/ap/signin", {
+      "headers": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-language": "en-US,en;q=0.9",
+        "cache-control": "max-age=0",
+        "content-type": "application/x-www-form-urlencoded",
+        "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"90\", \"Google Chrome\";v=\"90\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"
+      },
+      "referrer": "https://www.amazon.in/ap/signin",
+      "referrerPolicy": "strict-origin-when-cross-origin",
+      "body": `appActionToken=&appAction=SIGNIN_PWD_COLLECT&subPageType=SignInClaimCollect&openid.return_to=&prevRID=&workflowState=&email=${encodeURIComponent(phoneNumber)}&password=&create=0&metadata1=`,
+      "method": "POST",
+      "mode": "cors"
+    });
 
-    const page = await browser.newPage();
-    await page.goto("https://www.amazon.in/ap/signin?openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon.in%2F%3Fref_%3Dnav_signin&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.assoc_handle=inflex&openid.mode=checkid_setup&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0");
-
-    await page.type("#ap_email", phoneNumber);
-    await page.click("#continue");
-
-    await page.waitForSelector("#auth-password-missing-alert", { timeout: 5000 });
-    return true;
+    const text = await response.text();
+    return text.includes('auth-password-missing-alert');
   } catch (error) {
     console.error(`Error in checkUserExistence: ${error}`);
     return false;
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 }
 
