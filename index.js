@@ -1,6 +1,15 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
 const cors = require('cors');
+
+let puppeteer;
+let chromium;
+
+if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+  chromium = require('chrome-aws-lambda');
+  puppeteer = require('puppeteer-core');
+} else {
+  puppeteer = require('puppeteer');
+}
 
 const app = express();
 app.use(cors());
@@ -9,10 +18,7 @@ app.use(express.json());
 async function checkUserExistence(phoneNumber) {
   let browser;
   try {
-    // Check if we're running on Vercel
-    if (process.env.VERCEL) {
-      // Use chrome-aws-lambda
-      const chromium = require('chrome-aws-lambda');
+    if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
       browser = await puppeteer.launch({
         args: chromium.args,
         defaultViewport: chromium.defaultViewport,
@@ -20,7 +26,6 @@ async function checkUserExistence(phoneNumber) {
         headless: chromium.headless,
       });
     } else {
-      // Running locally, use regular Puppeteer
       browser = await puppeteer.launch();
     }
 
