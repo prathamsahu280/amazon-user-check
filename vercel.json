@@ -1,7 +1,7 @@
 {
     "builds": [
         {
-            "src": "app.py",
+            "src": "final.py",
             "use": "@vercel/python"
             ,"config": { "runtime": "python3.9" }
 
@@ -10,7 +10,7 @@
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "app.py"
+            "dest": "final.py"
         }
     ]
 }
