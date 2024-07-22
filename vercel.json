@@ -1,16 +1,21 @@
 {
+    "version": 2,
     "builds": [
-        {
-            "src": "final.py",
-            "use": "@vercel/python"
-            ,"config": { "runtime": "python3.11.3" }
-
-        }
+      {
+        "src": "final.py",
+        "use": "@vercel/python"
+      }
     ],
     "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "final.py"
+      {
+        "src": "/(.*)",
+        "dest": "final.py",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "headers": {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
         }
+      }
     ]
-}
+  }

@@ -7,8 +7,10 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import __version__ as selenium_version
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app) 
 
 def check_user_existence(phone_number):
     chrome_options = Options()
